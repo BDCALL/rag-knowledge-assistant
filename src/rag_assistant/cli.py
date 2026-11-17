@@ -73,12 +73,12 @@ def ingest_paths(kb: KnowledgeBase, paths: Sequence[Path], out: TextIO) -> int:
             result = kb.ingest(path.read_bytes(), path.name)
         except (UnsupportedFormatError, DocumentParseError) as exc:
             failures += 1
-            print(f"  ✗ {path}: {exc}", file=out)
+            print(f"  FAILED {path}: {exc}", file=out)
             continue
         verb = "indexed" if result.created else "skipped (duplicate)"
         doc = result.document
         print(
-            f"  ✓ {path.name}: {verb}, {doc.chunk_count} chunks, {result.elapsed_ms} ms", file=out
+            f"  OK {path.name}: {verb}, {doc.chunk_count} chunks, {result.elapsed_ms} ms", file=out
         )
     return failures
 

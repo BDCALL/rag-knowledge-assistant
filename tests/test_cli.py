@@ -54,7 +54,7 @@ def test_ingest_failure_sets_exit_code(tmp_path: Path, settings: Settings) -> No
     bad.write_bytes(b"not a pdf")
     code, out = _run(["ingest", str(bad)], settings)
     assert code == 1
-    assert "✗" in out
+    assert "FAILED" in out
 
 
 def test_ingest_missing_path_exits_2(tmp_path: Path, settings: Settings) -> None:

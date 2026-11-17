@@ -4,7 +4,7 @@
 
 Upload documents (PDF, Markdown, text), index them into Postgres + pgvector, and ask questions that are answered with citations.
 
-> 🚧 Work in progress: Day 3 of 5. Backend core, hybrid retrieval, reranking and cited answers (blocking and SSE-streamed) are done. Next: a Next.js chat UI (Day 4), and an evaluation harness plus full docs (Day 5).
+> Work in progress: Day 3 of 5. Backend core, hybrid retrieval, reranking and cited answers (blocking and SSE-streamed) are done. Next: a Next.js chat UI (Day 4), and an evaluation harness plus full docs (Day 5).
 
 ## What works today
 
