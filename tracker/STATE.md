@@ -10,13 +10,13 @@ project_length_days: 5
 status: in-progress
 
 ## User preferences (override the scheduled prompt where they differ)
-- Each commit ≈ 3–4 hours of human work: roughly 100–250 changed lines incl. tests, one focused change, never more than ~300.
-- 1–2 commits per run.
+- Tiny pushes: exactly 1 small commit per run, about 30-60 minutes of human work: roughly 20-60 changed lines incl. tests, never more than ~80 (lockfiles/generated files excluded). One focused change: a function, a test, a small fix or a docs tweak.
+- Projects take as many runs as the plan needs at this pace; extend end_date rather than making commits bigger.
 - Do NOT add Co-Authored-By or any other AI attribution lines to commit messages.
 - No emojis in code, docs or commit messages.
 
 ## Plan
-(5 days, 10 runs. Each run does a varied, modest amount: see the scheduled task prompt.)
+(Originally 5 days. At the tiny-push pace each run does one small step; the project continues until the plan is done.)
 - Day 1 (done, over-delivered): FastAPI app, ingestion (PDF/MD/text), chunking, embeddings, Postgres + pgvector, Docker Compose, CI, plus BM25 + RRF hybrid search, request-ID logging and rag-cli.
 - Day 2: Move code into BDCALL/rag-knowledge-assistant and get CI green there. Cross-encoder reranking behind a protocol, with an offline fallback.
 - Day 3: Answer generation: LLM provider protocol (OpenAI + deterministic fake LLM for tests), prompt with numbered citations, POST /ask, then SSE streaming.
@@ -39,3 +39,4 @@ status: in-progress
 
 ## Upcoming options (for when this project ends)
 (Filled in on the last day.)
+- 2026-11-20 (manual): Pacing changed to tiny pushes (1 commit of ~20-60 lines per run); project continues past the original end_date until the plan is done.
