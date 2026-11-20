@@ -5,7 +5,7 @@ Progress tracker for the portfolio projects. It used to live in BDCALL/ai-portfo
 current_project: rag-knowledge-assistant
 repo: BDCALL/rag-knowledge-assistant
 start_date: 2026-11-13
-end_date: 2026-11-17
+end_date: 2026-11-30
 project_length_days: 5
 status: in-progress
 
@@ -36,6 +36,7 @@ status: in-progress
 
 - 2026-11-16 (manual session): Moved the project to a fresh repo https://github.com/BDCALL/rag-knowledge-assistant so Claude no longer appears as a contributor. One starting commit holds all code so far, including the 4 patches parked in `pending/` (rag-cli ask, grouped/range citations, blank-query 422s); 182 tests passing. Removed `pending/`. 2026-11-17: tracker moved into this repo under `tracker/`. New pacing rules above. Old repo BDCALL/rag-knowledge-assistance can be archived or deleted. Next: Day 4: Next.js + TypeScript chat UI, in 3–4-hour commits.
 - 2026-11-20 morning (Day 4 start; first scheduled run since the manual move, so the calendar has slipped and the log is followed): Next.js 15 + React 19 + strict TypeScript scaffold in `frontend/` (ESLint flat config, Vitest, placeholder page, `.env.example` for `NEXT_PUBLIC_API_URL`) and a `frontend` CI job (lint, typecheck, test, build); typed `ApiClient` for /health and /documents (list, multipart upload, delete) with injectable fetch and `ApiError` that surfaces FastAPI `detail` messages. 6 vitest tests; backend still 182 passing. Medium run (~330 lines excl. lockfile, 2 commits). Next: Day 4 afternoon: upload form + document list components using the client.
+- 2026-11-20 morning (Day 4): `DocumentList` presentational component (empty state, singular/plural chunk counts, optional delete buttons) with 3 vitest tests rendered via `react-dom/server` (no extra deps); Vitest now picks up `.test.tsx` and uses the automatic JSX runtime. 9 frontend tests passing, lint + typecheck + build clean. ~80 lines, 1 commit. end_date extended to 2026-11-30. Next: `UploadForm` component (file input, calls `api.uploadDocument`, shows errors).
 
 ## Upcoming options (for when this project ends)
 (Filled in on the last day.)
