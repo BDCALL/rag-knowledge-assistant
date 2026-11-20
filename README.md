@@ -44,3 +44,15 @@ pytest                                   # unit + API tests (in-memory store)
 TEST_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rag_test pytest   # + pgvector
 ruff check . && ruff format --check . && mypy
 ```
+
+### Frontend (Next.js + TypeScript)
+
+The chat UI lives in `frontend/` and talks to the API on `http://localhost:8000` (CORS allows `http://localhost:3000`).
+
+```bash
+cd frontend
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL
+npm install
+npm run dev                  # http://localhost:3000
+npm run lint && npm run typecheck && npm test && npm run build
+```
