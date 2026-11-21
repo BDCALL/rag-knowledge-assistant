@@ -38,6 +38,20 @@ describe("ApiClient", () => {
     expect((body.get("file") as File).name).toBe("notes.md");
   });
 
+  it("posts a question to /ask as JSON", async () => {
+    const answer = { question: "Leave?", answer: "25 days [1].", citations: [1], sources: [] };
+    const { client, fetchStub } = clientWith(jsonResponse(answer));
+
+    await expect(client.ask({ question: "Leave?", k: 3 })).resolves.toMatchObject({
+      citations: [1],
+    });
+    const [url, init] = fetchStub.mock.calls[0]!;
+    expect(url).toBe("http://api.test/ask");
+    expect(init?.method).toBe("POST");
+    expect(new Headers(init?.headers).get("Content-Type")).toBe("application/json");
+    expect(JSON.parse(init?.body as string)).toEqual({ question: "Leave?", k: 3 });
+  });
+
   it("returns undefined for a 204 delete and encodes the id", async () => {
     const { client, fetchStub } = clientWith(new Response(null, { status: 204 }));
 

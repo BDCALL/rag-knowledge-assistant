@@ -34,3 +34,37 @@ export interface HealthOut {
   documents: number;
   chunks: number;
 }
+
+export type SearchMode = "hybrid" | "dense" | "lexical";
+
+export interface AskRequest {
+  question: string;
+  k?: number; // 1-20, how many sources the model sees
+  document_ids?: string[];
+  mode?: SearchMode;
+  rerank?: boolean;
+}
+
+export interface SourceOut {
+  number: number; // the n in citation [n]
+  cited: boolean;
+  chunk_id: string;
+  document_id: string;
+  document_title: string;
+  text: string;
+  score: number;
+  chunk_index: number;
+  start_char: number;
+  end_char: number;
+  page: number | null;
+  ranks: Record<string, number>;
+}
+
+export interface AskResponse {
+  question: string;
+  answer: string;
+  citations: number[]; // cited source numbers, in first-seen order
+  sources: SourceOut[];
+  llm: string;
+  elapsed_ms: number;
+}

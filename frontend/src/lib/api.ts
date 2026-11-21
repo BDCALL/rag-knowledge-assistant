@@ -1,4 +1,4 @@
-import type { DocumentList, HealthOut, IngestOut } from "./types";
+import type { AskRequest, AskResponse, DocumentList, HealthOut, IngestOut } from "./types";
 
 export const DEFAULT_API_URL = "http://localhost:8000";
 
@@ -47,6 +47,14 @@ export class ApiClient {
 
   async deleteDocument(id: string): Promise<void> {
     await this.request<void>(`/documents/${encodeURIComponent(id)}`, { method: "DELETE" });
+  }
+
+  ask(request: AskRequest): Promise<AskResponse> {
+    return this.request<AskResponse>("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
