@@ -1,3 +1,4 @@
+import { ChatPanel } from "@/components/ChatPanel";
 import { DocumentsPanel } from "@/components/DocumentsPanel";
 
 export default function HomePage() {
@@ -8,6 +9,7 @@ export default function HomePage() {
         Upload documents, then ask questions answered with numbered citations to the sources.
       </p>
       <DocumentsPanel />
+      <ChatPanel />
     </main>
   );
 }
