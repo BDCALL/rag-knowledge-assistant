@@ -52,6 +52,27 @@ describe("ApiClient", () => {
     expect(JSON.parse(init?.body as string)).toEqual({ question: "Leave?", k: 3 });
   });
 
+  it("streams /ask/stream events across chunk boundaries", async () => {
+    const chunks = [
+      'event: sources\ndata: {"question":"Q","llm":"fake","sources":[]}\n\nevent: tok',
+      'en\ndata: {"text":"Hi"}\n\n',
+      'event: done\ndata: {"citations":[]}',
+    ];
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const chunk of chunks) controller.enqueue(new TextEncoder().encode(chunk));
+        controller.close();
+      },
+    });
+    const { client, fetchStub } = clientWith(new Response(body, { status: 200 }));
+
+    const events = [];
+    for await (const event of client.askStream({ question: "Q" })) events.push(event.event);
+
+    expect(events).toEqual(["sources", "token", "done"]);
+    expect(fetchStub.mock.calls[0]![0]).toBe("http://api.test/ask/stream");
+  });
+
   it("returns undefined for a 204 delete and encodes the id", async () => {
     const { client, fetchStub } = clientWith(new Response(null, { status: 204 }));
 

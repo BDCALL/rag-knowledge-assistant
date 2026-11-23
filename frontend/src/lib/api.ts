@@ -1,3 +1,4 @@
+import { type AskStreamEvent, parseSseChunk } from "./sse";
 import type { AskRequest, AskResponse, DocumentList, HealthOut, IngestOut } from "./types";
 
 export const DEFAULT_API_URL = "http://localhost:8000";
@@ -55,6 +56,35 @@ export class ApiClient {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });
+  }
+
+  /**
+   * Streams POST /ask/stream, yielding each SSE event as it arrives.
+   *
+   * Errors before the stream starts throw `ApiError`; a model failure mid-stream
+   * arrives as an in-band `error` event instead.
+   */
+  async *askStream(request: AskRequest): AsyncGenerator<AskStreamEvent> {
+    const response = await this.fetchImpl(`${this.baseUrl}/ask/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new ApiError(response.status, await errorMessage(response));
+    }
+    if (!response.body) return;
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const { events, rest } = parseSseChunk(buffer + value);
+      buffer = rest;
+      yield* events;
+    }
+    // A final event without a trailing blank line is still complete.
+    if (buffer.trim()) yield* parseSseChunk(`${buffer}\n\n`).events;
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
