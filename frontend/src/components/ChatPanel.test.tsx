@@ -7,12 +7,12 @@ import { askErrorMessage, ChatPanel } from "./ChatPanel";
 
 describe("ChatPanel", () => {
   it("renders an empty question box with the Ask button disabled", () => {
-    const client = { ask: vi.fn() };
+    const client = { askStream: vi.fn() };
     const html = renderToStaticMarkup(<ChatPanel client={client} />);
     expect(html).toContain("<h2>Ask a question</h2>");
     expect(html).toContain('aria-label="Question"');
     expect(html).toMatch(/<button type="submit" disabled="">Ask<\/button>/);
-    expect(client.ask).not.toHaveBeenCalled();
+    expect(client.askStream).not.toHaveBeenCalled();
   });
 });
 

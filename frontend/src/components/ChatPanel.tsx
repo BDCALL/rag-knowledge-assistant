@@ -3,13 +3,14 @@
 import { useState, type FormEvent } from "react";
 
 import { api, ApiError, type ApiClient } from "@/lib/api";
+import { readAnswerStream } from "@/lib/streamAnswer";
 import type { AskResponse } from "@/lib/types";
 
 import { AnswerView } from "./AnswerView";
 
 interface ChatPanelProps {
   /** Defaults to the shared `api` (class instances cannot be passed from a Server Component). */
-  client?: Pick<ApiClient, "ask">;
+  client?: Pick<ApiClient, "askStream">;
 }
 
 /** Readable message for a failed /ask call. */
@@ -17,7 +18,7 @@ export function askErrorMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : "Could not get an answer. Is the API running?";
 }
 
-/** Question box that calls POST /ask and shows the latest answer with its sources. */
+/** Question box that streams an answer from POST /ask/stream and shows it with its sources. */
 export function ChatPanel({ client = api }: ChatPanelProps) {
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,8 +31,10 @@ export function ChatPanel({ client = api }: ChatPanelProps) {
     if (!trimmed) return;
     setBusy(true);
     setError(null);
+    setResponse(null);
     try {
-      setResponse(await client.ask({ question: trimmed }));
+      const detail = await readAnswerStream(client.askStream({ question: trimmed }), setResponse);
+      if (detail) setError(detail);
     } catch (err) {
       setError(askErrorMessage(err));
     } finally {

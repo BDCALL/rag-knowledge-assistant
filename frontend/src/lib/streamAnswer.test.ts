@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AskStreamEvent } from "./sse";
-import { applyStreamEvent } from "./streamAnswer";
+import { applyStreamEvent, readAnswerStream } from "./streamAnswer";
 import type { AskResponse, SourceOut } from "./types";
 
 function source(number: number): SourceOut {
@@ -42,5 +42,30 @@ describe("applyStreamEvent", () => {
       data: { question: "Q?", llm: "fake", sources: [] },
     });
     expect(applyStreamEvent(partial, { event: "error", data: { detail: "boom" } })).toBe(partial);
+  });
+});
+
+describe("readAnswerStream", () => {
+  async function* stream(events: AskStreamEvent[]) {
+    yield* events;
+  }
+
+  it("reports each partial answer and returns the error detail", async () => {
+    const updates: (string | undefined)[] = [];
+    const detail = await readAnswerStream(
+      stream([
+        { event: "sources", data: { question: "Q?", llm: "fake", sources: [source(1)] } },
+        { event: "token", data: { text: "Part" } },
+        { event: "error", data: { detail: "model failed" } },
+      ]),
+      (response) => updates.push(response?.answer),
+    );
+    expect(updates).toEqual(["", "Part", "Part"]);
+    expect(detail).toBe("model failed");
+  });
+
+  it("returns null when the stream completes", async () => {
+    const done = stream([{ event: "done", data: { citations: [] } }]);
+    expect(await readAnswerStream(done, () => undefined)).toBeNull();
   });
 });

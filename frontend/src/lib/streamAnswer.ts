@@ -30,3 +30,22 @@ export function applyStreamEvent(
       return current;
   }
 }
+
+/**
+ * Reads a whole /ask/stream, passing each partial answer to `onUpdate`.
+ *
+ * Returns the error detail if the stream ends with an `error` event, else null.
+ * Failures before the stream starts (e.g. a 422) are thrown by the client.
+ */
+export async function readAnswerStream(
+  events: AsyncIterable<AskStreamEvent>,
+  onUpdate: (response: AskResponse | null) => void,
+): Promise<string | null> {
+  let current: AskResponse | null = null;
+  for await (const event of events) {
+    current = applyStreamEvent(current, event);
+    onUpdate(current);
+    if (event.event === "error") return event.data.detail;
+  }
+  return null;
+}
