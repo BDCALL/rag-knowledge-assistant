@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AskResponse, SourceOut } from "@/lib/types";
 
-import { AnswerView, sourceLabel } from "./AnswerView";
+import { AnswerView, sourceLabel, splitCitations } from "./AnswerView";
 
 const source = (number: number, cited: boolean, page: number | null): SourceOut => ({
   number,
@@ -37,10 +37,24 @@ describe("AnswerView", () => {
 
   it("renders the answer and marks only cited sources", () => {
     const html = renderToStaticMarkup(<AnswerView response={response([source(1, true, 1), source(2, false, null)])} />);
-    expect(html).toContain("Staff get 25 days [1].");
-    expect(html).toContain('<li class="source cited">');
-    expect(html).toContain('<li class="source">');
+    expect(html).toContain("Staff get 25 days ");
+    expect(html).toContain('<li id="source-1" class="source cited">');
+    expect(html).toContain('<li id="source-2" class="source">');
     expect(html.match(/\(cited\)/g)).toHaveLength(1);
+  });
+
+  it("splits out citations that match a known source", () => {
+    expect(splitCitations("A [1] and B [7].", new Set([1]))).toEqual([
+      { kind: "text", text: "A " },
+      { kind: "citation", number: 1 },
+      { kind: "text", text: " and B [7]." },
+    ]);
+  });
+
+  it("links each citation to its source", () => {
+    const html = renderToStaticMarkup(<AnswerView response={response([source(1, true, 1)])} />);
+    expect(html).toContain('<a href="#source-1" class="citation">[1]</a>');
+    expect(html).toContain('id="source-1"');
   });
 
   it("omits the source list when nothing was retrieved", () => {

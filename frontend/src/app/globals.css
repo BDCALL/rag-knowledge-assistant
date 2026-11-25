@@ -30,3 +30,12 @@ body {
 .muted {
   color: var(--muted);
 }
+
+.citation {
+  font-size: 0.85em;
+  text-decoration: none;
+}
+
+.source:target {
+  outline: 2px solid currentColor;
+}
