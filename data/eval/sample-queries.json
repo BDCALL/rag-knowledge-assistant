@@ -1,0 +1,10 @@
+[
+  {"question": "How many days of annual leave do full-time staff get?", "relevant": ["leave-policy"]},
+  {"question": "Can I carry unused holiday into next year?", "relevant": ["leave-policy"]},
+  {"question": "What should I do about alert NWR-4031?", "relevant": ["incident-runbook"]},
+  {"question": "A robot stopped sending heartbeats", "relevant": ["incident-runbook"]},
+  {"question": "How long is raw telemetry kept?", "relevant": ["architecture"]},
+  {"question": "Which service exposes robot status to the dashboard?", "relevant": ["architecture"]},
+  {"question": "How do I set up my development environment?", "relevant": ["onboarding"]},
+  {"question": "When do I get access to production databases?", "relevant": ["onboarding"]}
+]
