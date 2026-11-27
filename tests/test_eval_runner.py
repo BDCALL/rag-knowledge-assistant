@@ -35,6 +35,19 @@ def test_lexical_finds_exact_alert_code(sample_kb: KnowledgeBase) -> None:
     assert report.mrr == 1.0
 
 
+def test_paraphrases_separate_lexical_from_hybrid(sample_kb: KnowledgeBase) -> None:
+    # Paraphrases share no words with the documents, so BM25 alone finds nothing;
+    # fusing in dense scores recovers them. This is why the labelled set includes them.
+    queries = [
+        LabelledQuery("vacation rollover deadline", frozenset({"leave-policy"})),
+        LabelledQuery("who approves my time off", frozenset({"leave-policy"})),
+    ]
+    lexical = evaluate_retrieval(sample_kb, queries, k=3, mode="lexical")
+    hybrid = evaluate_retrieval(sample_kb, queries, k=3, mode="hybrid")
+    assert lexical.recall == 0.0
+    assert hybrid.recall == 1.0
+
+
 def test_evaluate_rejects_empty_query_set(sample_kb: KnowledgeBase) -> None:
     with pytest.raises(ValueError, match="at least one query"):
         evaluate_retrieval(sample_kb, [])

@@ -6,5 +6,11 @@
   {"question": "How long is raw telemetry kept?", "relevant": ["architecture"]},
   {"question": "Which service exposes robot status to the dashboard?", "relevant": ["architecture"]},
   {"question": "How do I set up my development environment?", "relevant": ["onboarding"]},
-  {"question": "When do I get access to production databases?", "relevant": ["onboarding"]}
+  {"question": "When do I get access to production databases?", "relevant": ["onboarding"]},
+  {"question": "NWR-5102", "relevant": ["incident-runbook"]},
+  {"question": "vacation rollover deadline", "relevant": ["leave-policy"]},
+  {"question": "who approves my time off", "relevant": ["leave-policy"]},
+  {"question": "which tools enforce code style before I commit", "relevant": ["onboarding"]},
+  {"question": "queue backlog keeps growing, who do I escalate to", "relevant": ["incident-runbook"]},
+  {"question": "where do robot status events end up after ingestion", "relevant": ["architecture", "incident-runbook"]}
 ]
