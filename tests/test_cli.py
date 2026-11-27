@@ -153,3 +153,21 @@ def test_ask_with_empty_index_says_it_does_not_know(settings: Settings) -> None:
 def test_ask_missing_ingest_path_exits_2(tmp_path: Path, settings: Settings) -> None:
     code, _ = _run(["ask", "anything", "--ingest", str(tmp_path / "nope")], settings)
     assert code == 2
+
+
+def test_eval_prints_a_row_per_mode(settings: Settings) -> None:
+    code, out = _run(["eval", "-k", "3"], settings)
+    assert code == 0
+    assert "labelled queries, k=3" in out
+    rows = [
+        line.split()
+        for line in out.splitlines()
+        if line.split()[:1] in (["dense"], ["lexical"], ["hybrid"])
+    ]
+    assert [r[0] for r in rows] == ["dense", "lexical", "hybrid"]
+    assert all(0.0 <= float(v) <= 1.0 for r in rows for v in r[1:])
+
+
+def test_eval_missing_query_file_exits_2(tmp_path: Path, settings: Settings) -> None:
+    code, _ = _run(["eval", "--queries", str(tmp_path / "nope.json")], settings)
+    assert code == 2

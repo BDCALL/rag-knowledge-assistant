@@ -7,6 +7,7 @@ Examples::
     rag-cli demo                          # ingest the sample corpus and compare modes
     rag-cli --reranker term-overlap demo  # ...and add a reranked row per query
     rag-cli ask "how many holiday days do employees get" --ingest data/sample
+    rag-cli eval -k 3                     # recall@k and MRR per search mode
 
 The CLI uses the same :class:`KnowledgeBase` as the API, so with
 ``RAG_STORE_BACKEND=pgvector`` documents ingested here are served by the API too.
@@ -25,6 +26,7 @@ from typing import TextIO, cast
 from rag_assistant.api.app import build_knowledge_base
 from rag_assistant.config import RerankerProvider, Settings, get_settings
 from rag_assistant.domain import SearchHit
+from rag_assistant.evaluation import evaluate_retrieval, load_queries
 from rag_assistant.generation import extract_citations
 from rag_assistant.ingestion import DocumentParseError, UnsupportedFormatError
 from rag_assistant.service import KnowledgeBase, RerankerNotConfiguredError, SearchMode
@@ -41,6 +43,7 @@ def _default_sample_dir() -> Path:
 
 
 SAMPLE_DIR = _default_sample_dir()
+EVAL_QUERIES = SAMPLE_DIR.parent / "eval" / "sample-queries.json"
 DEMO_QUERIES = (
     "NWR-4031",
     "how many holiday days do employees get",
@@ -119,6 +122,16 @@ def print_answer(
     return citations
 
 
+def print_eval_table(kb: KnowledgeBase, queries_path: Path, k: int, out: TextIO) -> None:
+    """Score dense, lexical and hybrid search on a labelled set, one row per mode."""
+    queries = load_queries(queries_path)
+    print(f"\n{len(queries)} labelled queries, k={k}", file=out)
+    print(f"{'mode':<8} {'recall@' + str(k):>9} {'MRR':>7}", file=out)
+    for mode in ("dense", "lexical", "hybrid"):
+        report = evaluate_retrieval(kb, queries, k=k, mode=mode)
+        print(f"{mode:<8} {report.recall:>9.3f} {report.mrr:>7.3f}", file=out)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rag-cli", description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -159,6 +172,11 @@ def _build_parser() -> argparse.ArgumentParser:
     demo.add_argument("--corpus", type=Path, default=SAMPLE_DIR)
     demo.add_argument("-k", type=int, default=3)
     demo.add_argument("queries", nargs="*", default=list(DEMO_QUERIES))
+
+    ev = sub.add_parser("eval", help="Score retrieval modes on a labelled query set")
+    ev.add_argument("--corpus", type=Path, default=SAMPLE_DIR)
+    ev.add_argument("--queries", type=Path, default=EVAL_QUERIES)
+    ev.add_argument("-k", type=int, default=3)
     return parser
 
 
@@ -196,6 +214,9 @@ def main(
 
         print(f"Ingesting sample corpus from {args.corpus}:", file=out)
         failures = ingest_paths(kb, [args.corpus], out)
+        if args.command == "eval":
+            print_eval_table(kb, args.queries, args.k, out)
+            return 1 if failures else 0
         for query in args.queries:
             print(f'\n=== "{query}" ===', file=out)
             for mode in ("dense", "lexical", "hybrid"):
