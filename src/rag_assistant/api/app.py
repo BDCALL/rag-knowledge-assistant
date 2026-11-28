@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from rag_assistant import __version__
+from rag_assistant.api.auth import api_key_guard
 from rag_assistant.api.schemas import (
     AskRequest,
     AskResponse,
@@ -113,6 +114,9 @@ KB = Annotated[KnowledgeBase, Depends(get_kb)]
 
 def _register_routes(app: FastAPI, settings: Settings) -> None:
     max_bytes = int(settings.max_upload_mb * 1024 * 1024)
+    # Every route except /health needs the key, so probes and uptime checks
+    # keep working without one. With no RAG_API_KEY set the guard is a no-op.
+    auth = [Depends(api_key_guard(settings.api_key))]
 
     @app.get("/health", response_model=HealthOut, tags=["meta"])
     def health(kb: KB) -> HealthOut:
@@ -136,6 +140,7 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
         status_code=status.HTTP_201_CREATED,
         tags=["documents"],
         responses={200: {"description": "Duplicate: document already indexed"}},
+        dependencies=auth,
     )
     async def upload_document(
         kb: KB, file: Annotated[UploadFile, File(description="PDF, Markdown or text")]
@@ -157,12 +162,17 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
         code = status.HTTP_201_CREATED if result.created else status.HTTP_200_OK
         return JSONResponse(body.model_dump(mode="json"), status_code=code)
 
-    @app.get("/documents", response_model=DocumentList, tags=["documents"])
+    @app.get("/documents", response_model=DocumentList, tags=["documents"], dependencies=auth)
     def list_documents(kb: KB) -> DocumentList:
         docs = [DocumentOut.from_domain(d) for d in kb.store.list_documents()]
         return DocumentList(documents=docs, total=len(docs))
 
-    @app.get("/documents/{document_id}", response_model=DocumentOut, tags=["documents"])
+    @app.get(
+        "/documents/{document_id}",
+        response_model=DocumentOut,
+        tags=["documents"],
+        dependencies=auth,
+    )
     def get_document(document_id: str, kb: KB) -> DocumentOut:
         doc = kb.store.get(document_id)
         if doc is None:
@@ -173,12 +183,13 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
         "/documents/{document_id}",
         status_code=status.HTTP_204_NO_CONTENT,
         tags=["documents"],
+        dependencies=auth,
     )
     def delete_document(document_id: str, kb: KB) -> None:
         if not kb.delete(document_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
 
-    @app.post("/search", response_model=SearchResponse, tags=["search"])
+    @app.post("/search", response_model=SearchResponse, tags=["search"], dependencies=auth)
     def search(body: SearchRequest, kb: KB) -> SearchResponse:
         hits = kb.search(
             body.query, k=body.k, document_ids=body.document_ids, mode=body.mode, rerank=body.rerank
@@ -191,7 +202,7 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
             hits=[SearchHitOut.from_domain(h) for h in hits],
         )
 
-    @app.post("/ask", response_model=AskResponse, tags=["answers"])
+    @app.post("/ask", response_model=AskResponse, tags=["answers"], dependencies=auth)
     def ask(body: AskRequest, kb: KB) -> AskResponse:
         answer = kb.ask(
             body.question,
@@ -207,6 +218,7 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
         tags=["answers"],
         response_class=StreamingResponse,
         responses={200: {"content": {"text/event-stream": {}}}},
+        dependencies=auth,
     )
     def ask_stream(body: AskRequest, kb: KB) -> StreamingResponse:
         """Server-Sent Events: one ``sources`` event, ``token`` events, then ``done``."""
