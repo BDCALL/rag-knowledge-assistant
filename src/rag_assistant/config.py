@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     chunk_size: int = Field(default=800, gt=50, description="Target chunk size in characters")
     chunk_overlap: int = Field(default=120, ge=0)
 
+    # Auth: when set, clients must send this value in the X-API-Key header
+    api_key: str | None = None
+
     # Uploads
     max_upload_mb: float = Field(default=10.0, gt=0)
 
